@@ -57,6 +57,9 @@
 
 (defn- format-options-value [v]
   (cond
+    ;; added line to handle html like labels which don't
+    ;; work if wrapped in quotes
+    (str/starts-with? v "<<") (str v)
     (string? v) (str \" (escape-string v) \")
     (keyword? v) (name v)
     (coll? v) (if (literal? v)
@@ -117,6 +120,12 @@
       (format-options options ", ")
       "]")))
 
+
+;; added formatter for ranks
+(defn- format-rank [ids]
+  (apply str "{ rank=same; "
+         (concat (interpose ", " ids) ["}"])))
+
 ;;;
 
 (def ^:private ^:dynamic *node->id* nil)
@@ -128,12 +137,16 @@
 (defn- cluster->id [s]
   (*cluster->id* s))
 
-(defmacro ^:private with-gensyms
-  "Makes sure the mapping of node and clusters onto identifiers is consistent within its scope."
-  [& body]
-  `(binding [*node->id* (or *node->id* (memoize (fn [_#] (gensym "node"))))
-             *cluster->id* (or *cluster->id* (memoize (fn [_#] (gensym "cluster"))))]
-     ~@body))
+;; added to allow for a node to be in more than one cluster which
+;; is needed when we have nested clusters
+(defn- clust->nds [f nodes] 
+  (reduce-kv
+   (fn [m k v]
+     (let [separated (zipmap k (repeat (into #{} v)))]
+       (merge-with clojure.set/union separated m)))
+   {}
+   (dissoc (group-by f nodes) nil)))
+
 
 (defn graph->dot
   "Takes a description of a graph, and returns a string describing a GraphViz dot file.
@@ -147,26 +160,31 @@
              node->descriptor
              edge->descriptor
              cluster->parent
-             node->cluster
-             cluster->descriptor]
+             node->clusters  ;; changed from ->cluster to ->cluster*s*
+             cluster->descriptor
+             cluster->ranks]
       :or {directed? true
            vertical? true
            node->descriptor (constantly nil)
            edge->descriptor (constantly nil)
            cluster->parent (constantly nil)
-           node->cluster (constantly nil)
-           cluster->descriptor (constantly nil)}
+           node->clusters (constantly nil)
+           cluster->descriptor (constantly nil)
+           cluster->ranks (constantly nil)}
       :as graph-descriptor}]
 
-  (with-gensyms
+;; inlined the macro code for cljc
+  (binding [*node->id* (or *node->id* (memoize (fn [_] (gensym "node"))))
+            *cluster->id* (or *cluster->id* (memoize (fn [_] (gensym "cluster"))))]
     (let [current-cluster (::cluster graph-descriptor)
           subgraph? (boolean current-cluster)
-          cluster->nodes (when node->cluster
-                           (dissoc (group-by node->cluster nodes) nil))
+          cluster->nodes (when node->clusters
+                           (clust->nds node->clusters nodes)) ;; changed for nested clusters
           cluster? (if cluster->nodes
                      (comp boolean cluster->nodes)
                      (constantly false))
-          node? (set nodes)]
+          node? (set nodes)
+          ranks (cluster->ranks current-cluster)]
 
      (apply str
        (if current-cluster
@@ -211,12 +229,19 @@
 
            ;; nodes
            (->> nodes
-             (remove #(not= current-cluster (node->cluster %)))
+             (remove #(not (contains? (node->clusters %) current-cluster))) ;; <-changed
              (map
                #(format-node (node->id %)
                   (merge
                     default-node-options
                     (node->descriptor %)))))
+
+           ;; added ranks functionality
+           (->> ranks
+                (map
+                 (fn [r]
+                   (format-rank
+                    (mapv *node->id* r)))))
 
            ;; clusters
            (->> cluster->nodes
@@ -272,39 +297,4 @@
 
            ["}\n"]))))))
 
-(defn tree->dot
-  "Like tree-seq, but returns a string containing a GraphViz dot file.  Additional options
-   mimic those in graph->dot."
-  [branch? children root
-   & {:keys [vertical?
-             node->descriptor
-             edge->descriptor
-             cluster->parent
-             node->cluster
-             cluster->descriptor
-             options]
-      :or {vertical? true
-           node->descriptor (constantly {:label ""})
-           edge->descriptor (constantly nil)
-           node->cluster (constantly nil)
-           cluster->parent (constantly nil)
-           cluster->descriptor (constantly nil)}}]
-  (let [node->children (atom {})
-        nodes (tree-seq
-                (comp branch? second)
-                (fn [x]
-                  (swap! node->children assoc x
-                    (map vector
-                      (repeatedly #(Object.))
-                      (children (second x))))
-                  (@node->children x))
-                [(Object.) root])]
-    (graph->dot nodes #(@node->children %)
-      :directed? true
-      :vertical? vertical?
-      :options options
-      :node->descriptor (comp node->descriptor second)
-      :edge->descriptor (fn [a b] (edge->descriptor (second a) (second b)))
-      :node->cluster (comp node->cluster second)
-      :cluster->parent cluster->parent
-      :cluster->descriptor cluster->descriptor)))
+;; deleted tree->dot as didn't need

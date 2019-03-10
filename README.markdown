@@ -2,6 +2,17 @@
 
 Rhizome is a library for visualizing graph and tree structures.
 
+## Changes made in this fork
+
+- moved to .cljc format so now for Clojure/script
+- removed viz.clj i.e. this version of the library only generates dot
+- removed tree->dot function
+- added nested cluster functionality: & so changed from node->cluster to node->clusters (see below)
+- added cluster->ranks argument to allow for specification of ranks=same for certain nodes in a cluster (see below)
+
+Thanks to Zach Tellman for this wonderful library!
+
+
 ## Usage
 
 To include in your project, add this to your `project.clj`:
@@ -33,9 +44,10 @@ These can be followed by zero or more of the following keyword arguments:
 | `:node->descriptor` | takes a node, and returns a map of attributes onto values describing how the node should be rendered |
 | `:edge->descriptor` | takes the source and destination node, and returns a map of attributes onto values describing how the edge should be rendered |
 | `:options` | a map of attributes onto values describing how the graph should be rendered |
-| `:node->cluster` | takes a node and returns which cluster, if any, the node belongs to |
+| `:node->clusters` | takes a node and returns whicha seq of clusters, or nil, the node belongs to |
 | `:cluster->parent` | takes a cluster and returns which cluster, if any, it is contained within |
 | `:cluster->descriptor` | takes a cluster and returns a map of attributes onto values describing how the cluster should be rendered |
+| `:cluster->ranks` | takes a cluster and returns a seq of seqs of nodes, each seq of node will be assigned rank=same |
 
 The rendering attributes described by `:node->descriptor`, `:edge->descriptor`, `:cluster->descriptor`, and `:options` are described in detail [here](http://www.graphviz.org/content/attrs).  String and keyword values are interchangeable.
 
