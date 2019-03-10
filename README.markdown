@@ -47,7 +47,7 @@ These can be followed by zero or more of the following keyword arguments:
 | `:node->clusters` | takes a node and returns whicha seq of clusters, or nil, the node belongs to |
 | `:cluster->parent` | takes a cluster and returns which cluster, if any, it is contained within |
 | `:cluster->descriptor` | takes a cluster and returns a map of attributes onto values describing how the cluster should be rendered |
-| `:cluster->ranks` | takes a cluster and returns a seq of seqs of nodes, each seq of node will be assigned rank=same |
+| `:cluster->ranks` | takes a cluster and returns a seq of seqs of nodes, the nodes in each seq of nodes will be assigned rank=same |
 
 The rendering attributes described by `:node->descriptor`, `:edge->descriptor`, `:cluster->descriptor`, and `:options` are described in detail [here](http://www.graphviz.org/content/attrs).  String and keyword values are interchangeable.
 
