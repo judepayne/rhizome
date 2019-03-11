@@ -1,5 +1,6 @@
 (ns rhizome.dot
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.set :as set]))
 
 ;;;
 
@@ -143,7 +144,7 @@
   (reduce-kv
    (fn [m k v]
      (let [separated (zipmap k (repeat (into #{} v)))]
-       (merge-with clojure.set/union separated m)))
+       (merge-with set/union separated m)))
    {}
    (dissoc (group-by f nodes) nil)))
 
