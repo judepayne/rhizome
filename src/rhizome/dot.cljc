@@ -230,7 +230,9 @@
 
            ;; nodes
            (->> nodes
-             (remove #(not (contains? (node->clusters %) current-cluster))) ;; <-changed
+             (remove #(if current-cluster
+                        (not (contains? (node->clusters %) current-cluster))
+                        false)) ;; <-changed
              (map
                #(format-node (node->id %)
                   (merge
