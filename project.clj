@@ -1,5 +1,6 @@
-(defproject rhizome-cljc "0.1.0"
+(defproject rhizome-cljc "0.1.1"
   :description "a simple way to visualize graphs"
+  :url "https://github.com/judepayne/rhizome"
   :license {:name "MIT License"
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.10.0"]]
