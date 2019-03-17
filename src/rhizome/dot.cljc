@@ -56,22 +56,25 @@
 
 ;;;
 
+
+
 (defn- format-options-value [v]
-  (cond
-    ;; added line to handle html like labels which don't
-    ;; work if wrapped in quotes
-    (str/starts-with? v "<<") (str v)
-    (string? v) (str \" (escape-string v) \")
-    (keyword? v) (name v)
-    (coll? v) (if (literal? v)
-                (str "\"" (unwrap-literal v) "\"")
-                (str "\""
-                  (->> v
-                    (map format-options-value)
-                    (interpose ",")
-                    (apply str))
-                  "\""))
-    :else (str v)))
+  (let [v-str (str v)]
+    (cond
+      ;; added first condition to handle html like labels which don't
+      ;; work if wrapped in quotes
+      (str/starts-with? v-str "<<") v-str
+      (string? v) (str \" (escape-string v) \")
+      (keyword? v) (name v)
+      (coll? v) (if (literal? v)
+                  (str "\"" (unwrap-literal v) "\"")
+                  (str "\""
+                       (->> v
+                            (map format-options-value)
+                            (interpose ",")
+                            (apply str))
+                       "\""))
+      :else (str v))))
 
 (defn format-label [label]
   (cond

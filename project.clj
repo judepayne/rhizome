@@ -1,4 +1,4 @@
-(defproject rhizome-cljc "0.1.1"
+(defproject rhizome-cljc "0.1.2"
   :description "a simple way to visualize graphs"
   :url "https://github.com/judepayne/rhizome"
   :license {:name "MIT License"
