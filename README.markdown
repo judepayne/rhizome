@@ -18,7 +18,7 @@ Thanks to Zach Tellman for this wonderful library!
 To include in your project, add this to your `project.clj`:
 
 ```clj
-[rhizome "0.2.9"]
+[rhizome-cljc "0.1.2"]
 ```
 
 
